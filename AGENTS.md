@@ -13,6 +13,6 @@
   more of it.
 - `download.rockbox.org` is behind Anubis; the auto-download path may return an
   HTML challenge. Prefer the `--firmware`/`--bootloader` file paths for tests.
-- Commit and push to the Gitea remote (`origin`) when done.
+- Commit and push to the GitHub remote (`origin`) when done.
 
-See `../AGENTS.md` for the global rules (sudo/pkexec, Gitea push, etc.).
+See `../AGENTS.md` for the global rules (sudo/pkexec, GitHub push, etc.).
