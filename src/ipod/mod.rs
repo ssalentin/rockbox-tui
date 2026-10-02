@@ -219,16 +219,17 @@ pub(crate) fn round_up(n: u64, align: u64) -> u64 {
 }
 
 /// The ASCII "stop sign" that appears at the start of the Apple firmware
-/// partition. Reproduced byte-for-byte from `ipodpatcher.c`.
-pub(crate) const APPLE_STOP_SIGN: &[u8] = br#"{{~~  /-----\   {{~~ /       \  {{~~|         | {{~~| S T O P | {{~~|         | {{~~ \       /  {{~~  \-----/   Copyright(C) 2001 Apple Computer, Inc.----------------------------------------------------------------------------------------------------------"#;
+/// partition. Reproduced byte-for-byte from `ipodpatcher.c` (255 bytes,
+/// null-terminated on disk).
+pub(crate) const APPLE_STOP_SIGN: &[u8] = br#"{{~~  /-----\   {{~~ /       \  {{~~|         | {{~~| S T O P | {{~~|         | {{~~ \       /  {{~~  \-----/   Copyright(C) 2001 Apple Computer, Inc.---------------------------------------------------------------------------------------------------------"#;
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn stop_sign_is_256_bytes() {
-        assert_eq!(APPLE_STOP_SIGN.len(), 256);
+    fn stop_sign_is_255_bytes() {
+        assert_eq!(APPLE_STOP_SIGN.len(), 255);
         assert_eq!(&APPLE_STOP_SIGN[..4], b"{{~~");
         assert_eq!(&APPLE_STOP_SIGN[0x70..0x74], b"Copy");
     }

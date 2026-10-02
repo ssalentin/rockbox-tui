@@ -23,6 +23,7 @@ fn print_help() {
     println!("  --device <PATH>       whole-disk device (e.g. /dev/sdc)");
     println!("  --firmware <ZIP>      use a locally downloaded firmware zip (skip download)");
     println!("  --bootloader <FILE>   use a bootloader .ipod/.bin file (skip bundled)");
+    println!("  --target <NAME>       force a build target (e.g. ipodvideo64mb)");
     println!("  --backup-dir <DIR>    where to write the firmware backup");
     println!();
     println!("  -V, --version         print version");
@@ -198,6 +199,7 @@ fn parse_install_options(args: &[String]) -> Result<workflow::InstallOptions> {
         device: String::new(),
         firmware: None,
         bootloader: None,
+        target: None,
         backup_dir: None,
     };
     let mut i = 0;
@@ -216,6 +218,11 @@ fn parse_install_options(args: &[String]) -> Result<workflow::InstallOptions> {
             "--bootloader" => {
                 if let Some(v) = args.get(i + 1) {
                     opts.bootloader = Some(v.into());
+                }
+            }
+            "--target" => {
+                if let Some(v) = args.get(i + 1) {
+                    opts.target = Some(v.clone());
                 }
             }
             "--backup-dir" => {

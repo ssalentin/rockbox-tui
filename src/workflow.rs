@@ -24,6 +24,10 @@ pub struct InstallOptions {
     pub firmware: Option<PathBuf>,
     /// A locally provided bootloader (skips the bundled one when set).
     pub bootloader: Option<PathBuf>,
+    /// Force a Rockbox build target (e.g. `ipodvideo64mb`) instead of relying
+    /// on auto-detection. Useful when RAM size can't be read because the iPod
+    /// is booted into Rockbox rather than Apple Disk Mode.
+    pub target: Option<String>,
     /// Directory to store the firmware-partition backup in.
     pub backup_dir: Option<PathBuf>,
 }
@@ -83,7 +87,10 @@ pub fn install(opts: &InstallOptions, on: &mut dyn FnMut(Event)) -> Result<(), S
     on(Event::Log(format!("Firmware backup written to {}", backup_path.display())));
 
     // 2. Obtain the firmware zip.
-    let target = ipod.build_target().unwrap_or("ipodvideo").to_string();
+    let target = opts
+        .target
+        .clone()
+        .unwrap_or_else(|| ipod.build_target().unwrap_or("ipodvideo").to_string());
     let firmware_path = match &opts.firmware {
         Some(p) => p.clone(),
         None => {

@@ -226,7 +226,7 @@ mod tests {
 
         // --- firmware partition (LBA 1) ---
         let start = SECTOR;
-        img[start..start + 256].copy_from_slice(APPLE_STOP_SIGN);
+        img[start..start + APPLE_STOP_SIGN.len()].copy_from_slice(APPLE_STOP_SIGN);
         img[start + 0x100..start + 0x104].copy_from_slice(b"]ih[");
         put_le32(0, &mut img, start + 0x104); // diroffset = 0 + 0x200
         put_le16(3, &mut img, start + 0x10a); // version 3

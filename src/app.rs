@@ -160,6 +160,7 @@ impl App {
             device: dev.path.clone(),
             firmware: None,
             bootloader: None,
+            target: None,
             backup_dir: None,
         };
 
