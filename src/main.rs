@@ -14,6 +14,7 @@ fn print_help() {
     println!("Usage:");
     println!("  rockbox-tui                          launch the interactive TUI");
     println!("  rockbox-tui scan                     list connected iPods");
+    println!("  rockbox-tui info --device /dev/sdX    show firmware partition contents");
     println!("  rockbox-tui install --device /dev/sdX [OPTIONS]");
     println!("  rockbox-tui uninstall --device /dev/sdX");
     println!("  rockbox-tui backup  --device /dev/sdX --out FILE");
@@ -43,6 +44,7 @@ fn main() -> Result<()> {
         "-h" | "--help" => print_help(),
         "-V" | "--version" => println!("rockbox-tui {}", app::VERSION),
         "scan" => cmd_scan(),
+        "info" => cmd_info(&args[1..])?,
         "install" => cmd_install(&args[1..])?,
         "uninstall" => cmd_uninstall(&args[1..])?,
         "backup" => cmd_backup(&args[1..])?,
@@ -81,6 +83,67 @@ fn cmd_scan() {
             if ipod.macpod { "macpod" } else { "winpod" }
         );
     }
+}
+
+fn cmd_info(args: &[String]) -> Result<()> {
+    let mut device = None;
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--device" {
+            device = args.get(i + 1).cloned();
+        }
+        i += 1;
+    }
+    let Some(device) = device else {
+        eprintln!("info requires --device /dev/sdX");
+        std::process::exit(2);
+    };
+
+    let mut dev = ipod::io::Device::open_readonly(&device)?;
+    let mut ipod = ipod::Ipod::new(dev.sector_size);
+    ipod::read_partinfo(&mut ipod, &mut dev.file())
+        .map_err(|e| anyhow::anyhow!("{device}: {e}"))?;
+    ipod::read_directory(&mut ipod, &mut dev.file())
+        .map_err(|e| anyhow::anyhow!("{device}: {e}"))?;
+
+    let model = ipod
+        .images
+        .get(ipod.osos_image)
+        .map(|o| ipod::get_model(o.vers >> 8))
+        .flatten()
+        .map(|m| m.modelstr.to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    println!("{device}  {model}  ({})", if ipod.macpod { "macpod" } else { "winpod" });
+    println!("  firmware partition: LBA {} + {} sectors", ipod.pinfo[0].start, ipod.pinfo[0].size);
+
+    for (n, img) in ipod.images.iter().enumerate() {
+        let ftype = match img.ftype {
+            ipod::Ftype::Osos => "OSOS",
+            ipod::Ftype::Rsrc => "RSRC",
+            ipod::Ftype::Aupd => "AUPD",
+            ipod::Ftype::Hibe => "HIBE",
+            ipod::Ftype::Osbk => "OSBK",
+        };
+        let star = if n == ipod.osos_image { " (main firmware)" } else { "" };
+        if img.ftype == ipod::Ftype::Osos && img.entry_offset > 0 {
+            println!(
+                "  [{n}] {ftype}{star}: {size} bytes, bootloader present ({bl} bytes at +{eo})",
+                size = img.len,
+                bl = img.len - img.entry_offset,
+                eo = img.entry_offset
+            );
+        } else {
+            println!("  [{n}] {ftype}{star}: {} bytes", img.len);
+        }
+    }
+
+    let bootloader = ipod.images[ipod.osos_image].entry_offset > 0;
+    println!(
+        "  Rockbox bootloader: {}",
+        if bootloader { "installed" } else { "not installed" }
+    );
+    Ok(())
 }
 
 fn cmd_install(args: &[String]) -> Result<()> {
