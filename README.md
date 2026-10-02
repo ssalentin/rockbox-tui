@@ -92,12 +92,36 @@ Two external artifacts are involved at install time:
   `rockbox-<target>.zip` manually from <https://www.rockbox.org/download/> and
   pass it with `--firmware`.
 
-## Supported targets
+## Supported devices
 
-Currently implemented and tested against synthetic images: the generic
-`ipodpatcher` path, i.e. all 1g–5.5g iPods and the 1st-gen Mini/Nano. The
-2nd-gen Nano (S5L87xx) uses a different bootloader scheme and is **not**
-implemented yet.
+### Tested on hardware
+
+| Device                    | Rockbox target | Status                                    |
+| ------------------------- | -------------- | ----------------------------------------- |
+| iPod Video (5th gen)      | `ipodvideo`    | detection, parsing and backup verified; flash path not yet run |
+
+### Implemented (compatible, not yet hardware-verified)
+
+These use the same generic `ipodpatcher` path and should work, but have only
+been exercised against synthetic disk images so far:
+
+| Device                    | Rockbox target    |
+| ------------------------- | ----------------- |
+| iPod 1st/2nd gen          | `ipod1g2g`        |
+| iPod 3rd gen              | `ipod3g`          |
+| iPod 4th gen (grayscale)  | `ipod4gray`       |
+| iPod Photo/Color          | `ipodcolor`       |
+| iPod Mini 1st gen         | `ipodmini1g`      |
+| iPod Mini 2nd gen         | `ipodmini2g`      |
+| iPod Nano 1st gen         | `ipodnano1g`      |
+| iPod Video 5th/5.5g (64 MiB)| `ipodvideo64mb` |
+
+### Not supported
+
+- iPod Nano 2nd gen and later (the S5L87xx family) use a different bootloader
+  scheme and are **not** implemented.
+
+If you have another model, please report what works — or broken — as an issue.
 
 ## Development
 
