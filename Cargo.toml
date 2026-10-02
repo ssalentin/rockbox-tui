@@ -1,0 +1,22 @@
+[package]
+name = "rockbox-tui"
+version = "0.1.0"
+edition = "2021"
+description = "Install Rockbox onto iPod devices from the comfort of a terminal"
+license = "GPL-2.0-or-later"
+
+[dependencies]
+ratatui = "0.30"
+anyhow = "1"
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+dirs = "6"
+chrono = "0.4"
+ureq = "2.10"
+zip = "2"
+
+[profile.release]
+lto = true
+opt-level = 3
+strip = true
