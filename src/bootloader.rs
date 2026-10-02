@@ -9,15 +9,20 @@
 use std::fs;
 use std::path::Path;
 
+/// The bundled default bootloader: [ipodloader2](https://github.com/crozone/ipodloader2)
+/// (GPLv2), a dual-boot loader for the classic iPod line (1g–5.5g, Mini 1g,
+/// Nano 1g). A user-provided `--bootloader` file overrides this.
+const BUNDLED_BOOTLOADER: &[u8] = include_bytes!("bootloader_ipod.bin");
+
 /// Load a bootloader, returning the raw binary (header stripped).
 ///
-/// If `path` is `None`, a bundled bootloader is used (when enabled at build
-/// time). The `.ipod` header is detected and stripped automatically; a bare
-/// `.bin`/`loader.bin` is passed through unchanged.
+/// If `path` is `None`, the bundled bootloader is used. The `.ipod` header is
+/// detected and stripped automatically; a bare `.bin`/`loader.bin` is passed
+/// through unchanged.
 pub fn load(path: Option<&Path>) -> Result<Vec<u8>, String> {
     let bytes = match path {
         Some(p) => fs::read(p).map_err(|e| format!("read bootloader {}: {e}", p.display()))?,
-        None => return Err("no bootloader provided (build with --features bundled-bootloader)".into()),
+        None => BUNDLED_BOOTLOADER.to_vec(),
     };
 
     // Strip an 8-byte ".ipod" header if present: the header is 4 bytes of
@@ -38,6 +43,11 @@ pub fn load(path: Option<&Path>) -> Result<Vec<u8>, String> {
 mod tests {
     use super::*;
     use std::io::Write;
+
+    #[test]
+    fn bundled_bootloader_is_present() {
+        assert!(BUNDLED_BOOTLOADER.len() > 1024, "bundled bootloader missing or too small");
+    }
 
     #[test]
     fn strips_ipod_header() {

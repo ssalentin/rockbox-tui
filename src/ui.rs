@@ -34,6 +34,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.show_help {
         draw_help(f, area);
     }
+    if app.confirm {
+        draw_confirm(f, area, app);
+    }
 }
 
 fn draw_title(f: &mut Frame, area: Rect) {
@@ -186,12 +189,56 @@ fn draw_help(f: &mut Frame, area: Rect) {
         Line::from(" ? / h       toggle this help"),
         Line::from(" q / Esc     quit"),
         Line::from(""),
-        Line::from("Installing requires raw-device access — run with sudo."),
-        Line::from("It backs up the firmware, flashes the Rockbox bootloader,"),
+        Line::from("Needs raw-device access — the TUI elevates via pkexec."),
+        Line::from("Install backs up the firmware, flashes the bootloader,"),
         Line::from("and copies .rockbox onto the mounted data partition."),
     ];
     let p = Paragraph::new(text)
         .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(ACCENT)))
+        .wrap(Wrap { trim: true });
+    f.render_widget(Clear, popup);
+    f.render_widget(p, popup);
+}
+
+fn draw_confirm(f: &mut Frame, area: Rect, app: &App) {
+    let popup = centered_rect(64, 62, area);
+    let mut lines = vec![
+        Line::from(Span::styled(
+            " Install Rockbox? ",
+            Style::default().fg(Color::Black).bg(ERR).add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+    ];
+
+    if let Some(d) = app.selected_device() {
+        let model = d.ipod.model.as_ref().map(|m| m.modelstr).unwrap_or("unknown");
+        let target = d.ipod.build_target().unwrap_or("unknown");
+        lines.push(Line::from(vec![
+            Span::styled("Device: ", Style::default().fg(MUTED)),
+            Span::styled(format!("{} ({model})", d.path), Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Build target: ", Style::default().fg(MUTED)),
+            Span::styled(target, Style::default().fg(ACCENT)),
+        ]));
+        lines.push(Line::from(""));
+    }
+
+    lines.extend_from_slice(&[
+        Line::from("This will back up the firmware partition, then flash"),
+        Line::from("the Rockbox bootloader and copy .rockbox onto the"),
+        Line::from("mounted data partition."),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled(" y / Enter  ", Style::default().fg(OK).add_modifier(Modifier::BOLD)),
+            Span::styled("install   ", Style::default().fg(Color::White)),
+            Span::styled(" n / Esc ", Style::default().fg(ERR).add_modifier(Modifier::BOLD)),
+            Span::styled("cancel", Style::default().fg(Color::White)),
+        ]),
+    ]);
+
+    let p = Paragraph::new(lines)
+        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(ERR)))
         .wrap(Wrap { trim: true });
     f.render_widget(Clear, popup);
     f.render_widget(p, popup);

@@ -36,6 +36,8 @@ pub struct App {
     pub frame: u64,
     pub should_quit: bool,
     pub show_help: bool,
+    /// A confirmation dialog is shown before the install actually starts.
+    pub confirm: bool,
 
     worker_rx: Option<mpsc::Receiver<WorkerMsg>>,
     worker_handle: Option<std::thread::JoinHandle<()>>,
@@ -75,6 +77,7 @@ impl App {
             frame: 0,
             should_quit: false,
             show_help: false,
+            confirm: false,
             worker_rx: None,
             worker_handle: None,
         }
@@ -192,6 +195,20 @@ impl App {
             }
             return;
         }
+        if self.confirm {
+            match key.code {
+                KeyCode::Char('y') | KeyCode::Enter => {
+                    self.confirm = false;
+                    self.start_install();
+                }
+                KeyCode::Char('n') | KeyCode::Esc | KeyCode::Char('q') => {
+                    self.confirm = false;
+                    self.status_msg = Some("cancelled".into());
+                }
+                _ => {}
+            }
+            return;
+        }
         match key.code {
             KeyCode::Char('q') | KeyCode::Esc => {
                 if self.running {
@@ -218,7 +235,13 @@ impl App {
                     self.selected = (self.selected + self.devices.len() - 1) % self.devices.len();
                 }
             }
-            KeyCode::Char('s') | KeyCode::Enter => self.start_install(),
+            KeyCode::Char('s') | KeyCode::Enter => {
+                if self.selected_device().is_some() {
+                    self.confirm = true;
+                } else {
+                    self.status_msg = Some("no iPod selected".into());
+                }
+            }
             KeyCode::Char('r') => self.rescan(),
             KeyCode::Char('f') => {
                 self.log_follow = !self.log_follow;

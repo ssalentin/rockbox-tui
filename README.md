@@ -1,5 +1,10 @@
 # rockbox-tui
 
+> **⚠️ Experimental** — work in progress. The firmware-partition logic is
+> unit-tested against synthetic images and has been exercised read-only on a
+> real iPod Video, but the write (flash) path has **not** been validated on
+> hardware yet. Use with care and keep a firmware backup.
+
 Install [Rockbox](https://www.rockbox.org/) onto iPods from the comfort of a
 terminal — no Windows machine, no Rockbox Utility.
 
@@ -73,33 +78,19 @@ sudo rockbox-tui restore  --device /dev/sdX --from ipod-firmware.img
 
 ## Getting the firmware and bootloader
 
-Two external artifacts are needed at install time:
+Two external artifacts are involved at install time:
 
+- **Bootloader** — bundled in the binary (no download needed). It ships
+  [ipodloader2](https://github.com/crozone/ipodloader2) (GPLv2), a dual-boot
+  loader for the classic iPod line (1g–5.5g, Mini 1g, Nano 1g). Override it
+  with `--bootloader bootloader-ipodvideo.ipod` if you want the minimal
+  official Rockbox bootloader instead.
 - **Firmware** (the `.rockbox` build): downloaded automatically from
   `download.rockbox.org`, *or* supplied via `--firmware`. Note that
   `download.rockbox.org` sits behind a proof-of-work bot wall (Anubis), so the
   automatic download may fail from a headless tool; in that case download
   `rockbox-<target>.zip` manually from <https://www.rockbox.org/download/> and
   pass it with `--firmware`.
-- **Bootloader**: passed with `--bootloader bootloader-ipodvideo.ipod`. The
-  bootloader is the small ARM binary from `bootloader/ipod.c` in the Rockbox
-  source (built with `arm-none-eabi-gcc`). Bundling a prebuilt bootloader is
-  planned.
-
-### Building the bootloader
-
-```bash
-# from the Rockbox source tree, targeting ipodvideo:
-#   build with the Rockbox build system -> bootloader-ipodvideo.ipod
-```
-
-or, for the third-party dual-boot loader:
-
-```bash
-git clone https://github.com/crozone/ipodloader2
-cd ipodloader2 && make CROSS=arm-none-eabi-   # needs gcc-arm-none-eabi
-# -> loader.bin, pass it with --bootloader loader.bin
-```
 
 ## Supported targets
 
