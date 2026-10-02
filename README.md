@@ -80,8 +80,8 @@ activates a default theme. Disable that with `--no-themes`.
 5. **Flash** — appends the bootloader to the OSOS firmware image and rewrites
    the firmware directory (the `entryOffset`/`len`/`chksum` dance from
    `ipodpatcher`).
-6. **Themes** — installs the bundled theme pack (a curated starter theme with
-   its fonts) and activates the default theme by writing its settings to
+6. **Themes** — installs the bundled theme pack (musicOS, the default, plus
+   Chroma) and activates musicOS by writing its settings to
    `.rockbox/config.cfg`. Skip with `--no-themes`.
 
 ## Getting the firmware and bootloader
