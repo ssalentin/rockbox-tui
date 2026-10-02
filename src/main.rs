@@ -24,6 +24,7 @@ fn print_help() {
     println!("  rockbox-tui restore --device /dev/sdX --from FILE");
     println!("  rockbox-tui theme   --device /dev/sdX --zip THEME.zip");
     println!("  rockbox-tui fonts   --device /dev/sdX --zip FONTS.zip");
+    println!("  rockbox-tui themes  --device /dev/sdX   (install bundled theme pack)");
     println!();
     println!("Install options:");
     println!("  --device <PATH>       whole-disk device (e.g. /dev/sdc)");
@@ -58,6 +59,7 @@ fn main() -> Result<()> {
         "restore" => cmd_restore(&args[1..])?,
         "theme" => cmd_assets(&args[1..], "theme")?,
         "fonts" => cmd_assets(&args[1..], "fonts")?,
+        "themes" => cmd_themes(&args[1..])?,
         other => {
             eprintln!("unknown command: {other}");
             print_help();
@@ -288,7 +290,29 @@ fn cmd_restore(args: &[String]) -> Result<()> {
     }
 }
 
-/// Install a theme or font archive onto the mounted data partition.
+/// Install the bundled theme pack and activate the default theme.
+fn cmd_themes(args: &[String]) -> Result<()> {
+    let mut device = None;
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--device" {
+            device = args.get(i + 1).cloned();
+        }
+        i += 1;
+    }
+    let Some(device) = device else {
+        eprintln!("themes requires --device /dev/sdX");
+        std::process::exit(2);
+    };
+
+    let mount = mounts::find_data_mount(&device)
+        .ok_or_else(|| anyhow::anyhow!("data partition is not mounted — mount it first"))?;
+    let written = themes::install_bundled(&mount).map_err(|e| anyhow::anyhow!("{e}"))?;
+    themes::activate_default(&mount).map_err(|e| anyhow::anyhow!("{e}"))?;
+    println!("Installed {} bundled theme file(s) and activated the default theme.", written.len());
+    Ok(())
+}
+
 fn cmd_assets(args: &[String], kind: &str) -> Result<()> {
     let mut device = None;
     let mut zip = None;
@@ -311,7 +335,7 @@ fn cmd_assets(args: &[String], kind: &str) -> Result<()> {
 
     let mount = mounts::find_data_mount(&device)
         .ok_or_else(|| anyhow::anyhow!("data partition is not mounted — mount it first"))?;
-    let installed = theme::install(std::path::Path::new(&zip), &mount)
+    let installed = theme::install_zip(std::path::Path::new(&zip), &mount)
         .map_err(|e| anyhow::anyhow!("{e}"))?;
 
     println!("Installed {} file(s) to {}/.rockbox:", installed.len(), mount.display());

@@ -44,11 +44,10 @@ pub fn map_entry(rel: &Path) -> Option<PathBuf> {
 }
 
 /// Install a theme archive onto the device, returning the list of files
-/// written (relative to `.rockbox/`).
-pub fn install(zip_path: &Path, mount: &Path) -> Result<Vec<PathBuf>, String> {
-    let file = fs::File::open(zip_path).map_err(|e| format!("open {}: {e}", zip_path.display()))?;
-    let mut archive =
-        zip::ZipArchive::new(file).map_err(|e| format!("open zip {}: {e}", zip_path.display()))?;
+/// written (relative to `.rockbox/`). Accepts any readable+seekable source
+/// (a zip file, or an in-memory buffer).
+pub fn install<R: io::Read + io::Seek>(reader: R, mount: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut archive = zip::ZipArchive::new(reader).map_err(|e| format!("open zip: {e}"))?;
 
     let rockbox = mount.join(".rockbox");
     fs::create_dir_all(&rockbox).map_err(|e| format!("create {}: {e}", rockbox.display()))?;
@@ -73,6 +72,12 @@ pub fn install(zip_path: &Path, mount: &Path) -> Result<Vec<PathBuf>, String> {
     }
 
     Ok(installed)
+}
+
+/// Install a theme archive from a zip file on disk.
+pub fn install_zip(zip_path: &Path, mount: &Path) -> Result<Vec<PathBuf>, String> {
+    let file = fs::File::open(zip_path).map_err(|e| format!("open {}: {e}", zip_path.display()))?;
+    install(file, mount)
 }
 
 #[cfg(test)]
@@ -113,7 +118,7 @@ mod tests {
         let mount = dir.join("mount");
         fs::create_dir_all(&mount).unwrap();
 
-        let installed = install(&zip_path, &mount).unwrap();
+        let installed = install_zip(&zip_path, &mount).unwrap();
         assert_eq!(installed.len(), 3);
         assert!(mount.join(".rockbox/themes/MyTheme.cfg").exists());
         assert!(mount.join(".rockbox/fonts/12-Test.fnt").exists());
