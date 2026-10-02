@@ -1,0 +1,278 @@
+# ==================================================
+# musicOS_v2 - QUICK SCREEN V2
+# iPod Video 5 / 5.5G - 320x240
+# ==================================================
+
+%wd
+
+
+# ==================================================
+# PRELOADS
+# ==================================================
+
+# Quick Screen V2 backdrop
+%xl(QSBackdrop,musicOS_QS2_backdrop.bmp,0,0)
+
+# Battery states
+%xl(J,batt_status.bmp,0,4,10)
+
+# Volume glyphs
+# 1 = mute
+# 2 = low
+# 3 = mid
+# 4 = high
+%xl(VG,volume_glyphs.bmp,0,0,4)
+
+# Brightness glyphs
+# 1 = low
+# 2 = mid
+# 3 = high
+%xl(BG,brightness_glyphs.bmp,0,0,3)
+
+# Home screen backdrop
+%xl(HomeBG,musicOS_homescreen_backdrop.bmp,0,0)
+
+%xl(SH,musicOS_shuffle_sprite.bmp,0,0,2)
+%xl(RP,musicOS_repeat_sprite.bmp,0,0,5)
+
+# Home Play / Pause
+# 1 = Play
+# 2 = Pause
+%xl(PP,musicOS_playback.bmp,0,0,2)
+
+
+# ==================================================
+# BACKDROP LAYER
+# ==================================================
+
+# Quick Screen = q
+# Home / normal screens = a
+
+%?if(%cs, =, 10)<%Vd(q)|%Vd(a)>
+
+%Vl(a,0,0,320,240,-)
+%VB
+%xd(HomeBG)
+
+%Vl(q,0,0,320,240,-)
+%VB
+%xd(QSBackdrop)
+
+
+# ==================================================
+# FONTS
+# ==================================================
+
+%Fl(2,13-Inter-SemiBold.fnt)
+%Fl(3,15-Inter-Bold.fnt)
+%Fl(4,20-Inter-SemiBold.fnt)
+
+
+# ==================================================
+# UI VIEWPORTS
+# ==================================================
+
+# Normal Rockbox interface
+%Vi(Normal,10,29,300,141,4)
+%Vf(000000)
+%Vb(FFFFFF)
+
+# Hide native Quick Screen
+%Vi(Empty,319,239,1,1,-)
+
+# Normal screens
+%?if(%cs, !=, 10)<%Vd(i)%VI(Normal)>
+
+# Custom Quick Screen
+%?if(%cs, =, 10)<%VI(Empty)>
+
+
+# ==================================================
+# MENU TITLE
+# ==================================================
+
+%Vl(i,10,7,220,22,4)
+%Vf(F24E61)
+%Vb(FFFFFF)
+%?Lt<%Lt>
+
+
+# ==================================================
+# HOME SCREEN
+# ==================================================
+
+%?if(%cs, !=, 10)<%Vd(f)%Vd(g)>
+
+# ==================================================
+# HOME ALBUM ART
+# ==================================================
+
+%V(20,182,42,42,-)
+%?if(%cs, !=, 10)<%Cl(0,0,42,42,c,c)%Cd>
+
+# ==================================================
+# HOME TRACK TITLE
+# ==================================================
+
+%V(69,186,130,18,3)
+%Vf(000000)
+%Vb(FFFFFF)
+%?if(%cs, !=, 10)<%s%al%?mp<Not Playing|%?it<%it|%fn>|%?it<%it|%fn>|%?it<%it|%fn>|%?it<%it|%fn>>>
+
+# ==================================================
+# HOME ALBUM / ARTIST
+# ==================================================
+
+%V(70,202,130,18,2)
+%Vf(F24E61)
+%Vb(FFFFFF)
+%?if(%cs, !=, 10)<%s%al%?mp<|%?id<%id|-> - %?ia<%ia|->|%?id<%id|-> - %?ia<%ia|->|%?id<%id|-> - %?ia<%ia|->|%?id<%id|-> - %?ia<%ia|->>>
+
+
+# ==================================================
+# HOME PLAY / PAUSE
+# ==================================================
+
+%V(243,191,18,21,-)
+%?if(%cs, !=, 10)<%?mp<%xd(PP,2)|%xd(PP,1)|%xd(PP,2)|%xd(PP,1)|%xd(PP,1)>>
+
+
+# ==================================================
+# HOME BATTERY PERCENTAGE
+# ==================================================
+
+%Vl(g,242,10,36,16,2)
+%Vf(000000)
+%Vb(FFFFFF)
+%ar%bl%%
+
+
+# ==================================================
+# HOME BATTERY ICON
+# ==================================================
+
+%Vl(f,282,3,27,20,-)
+%Vf(000000)
+%Vb(FFFFFF)
+
+%?bp<%?bl<%xd(Ja)|%xd(Ja)|%xd(Ja)|%xd(Jb)|%xd(Jb)|%xd(Jb)|%xd(Jb)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Je)|%xd(Je)>|%?bl<%xd(Jf)|%xd(Jf)|%xd(Jf)|%xd(Jg)|%xd(Jg)|%xd(Jg)|%xd(Jg)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Jj)|%xd(Jj)>>
+
+
+# ==================================================
+# RESET VIEWPORT CONTEXT
+# ==================================================
+
+%V(319,239,1,1,-)
+
+
+# ==================================================
+# QUICK SCREEN
+# ==================================================
+
+%?if(%cs, =, 10)<%Vd(QSClock)%Vd(QSTrack)%Vd(QSBatteryPercent)%Vd(QSBatteryIcon)%Vd(QSVolume)%Vd(QSBrightness)%Vd(QSVolumeIcon)%Vd(QSBrightnessIcon)%Vd(QSShuffleActive)%Vd(QSRepeatActive)%Vd(QSCustom1)%Vd(QSCustom2)>
+
+
+# ==================================================
+# CLOCK
+# ==================================================
+
+%Vl(QSClock,11,10,38,16,2)
+%Vf(000000)
+%Vb(FFFFFF)
+%al%cH:%cM
+
+
+# ==================================================
+# TRACK NUMBER / PLAYLIST TOTAL
+# ==================================================
+
+%Vl(QSTrack,120,10,80,16,2)
+%Vf(6F6F6F)
+%Vb(FFFFFF)
+%ac%pp of %pe
+
+
+# ==================================================
+# BATTERY PERCENTAGE
+# ==================================================
+
+%Vl(QSBatteryPercent,242,10,36,16,2)
+%Vf(000000)
+%Vb(FFFFFF)
+%ar%bl%%
+
+
+# ==================================================
+# BATTERY ICON
+# ==================================================
+
+%Vl(QSBatteryIcon,282,3,27,20,-)
+%Vf(000000)
+%Vb(FFFFFF)
+
+%?bp<%?bl<%xd(Ja)|%xd(Ja)|%xd(Ja)|%xd(Jb)|%xd(Jb)|%xd(Jb)|%xd(Jb)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jc)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Jd)|%xd(Je)|%xd(Je)>|%?bl<%xd(Jf)|%xd(Jf)|%xd(Jf)|%xd(Jg)|%xd(Jg)|%xd(Jg)|%xd(Jg)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Jh)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Ji)|%xd(Jj)|%xd(Jj)>>
+
+
+# ==================================================
+# VOLUME SLIDER
+# ==================================================
+
+%Vl(QSVolume,177,51,52,177,-)
+%pv(0,0,52,177,image,musicOS_QS2_slider_fill.bmp,vertical)
+
+
+# ==================================================
+# BRIGHTNESS SLIDER
+# ==================================================
+
+%Vl(QSBrightness,249,51,52,177,-)
+%St(0,0,52,177,image,musicOS_QS2_slider_fill.bmp,setting,brightness,vertical)
+
+
+# ==================================================
+# VOLUME GLYPH
+# ==================================================
+
+%Vl(QSVolumeIcon,189,190,28,24,-)
+
+%?if(%pv, =, -90)<%xd(VG,1)|%xd(VG,4)>
+
+
+# ==================================================
+# BRIGHTNESS GLYPH
+# ==================================================
+
+%Vl(QSBrightnessIcon,263,190,24,24,-)
+%?if(%St(brightness), =, 1)<%xd(BG,1)|%xd(BG,3)>
+
+
+# ==================================================
+# SHUFFLE - ACTIVE
+# ==================================================
+
+%Vl(QSShuffleActive,10,51,144,35,-)
+%?ps<%xd(SH,2)|%xd(SH,1)>
+
+
+# ==================================================
+# REPEAT - ACTIVE
+# ==================================================
+
+%Vl(QSRepeatActive,10,97,144,35,-)
+%?mm<%xd(RP,1)|%xd(RP,2)|%xd(RP,3)|%xd(RP,4)|%xd(RP,5)>
+
+
+# ==================================================
+# CUSTOM 1 / TOP
+# ==================================================
+
+%Vl(QSCustom1,10,143,144,35,-)
+%?if(%St(qs top), =, brightness)<%x(BU,musicOS_brightness_up_on.bmp,0,0)|%x(C1,musicOS_custom1_on.bmp,0,0)>
+
+
+# ==================================================
+# CUSTOM 2 / BOTTOM
+# ==================================================
+
+%Vl(QSCustom2,10,189,144,34,-)
+%?if(%St(qs bottom), =, brightness)<%x(BD,musicOS_brightness_down_on.bmp,0,0)|%x(C2,musicOS_custom2_on.bmp,0,0)>

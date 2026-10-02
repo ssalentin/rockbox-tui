@@ -38,9 +38,12 @@ pub struct App {
     pub show_help: bool,
     /// A confirmation dialog is shown before the install actually starts.
     pub confirm: bool,
+    /// Latest available Rockbox version (fetched in the background).
+    pub latest_version: Option<String>,
 
     worker_rx: Option<mpsc::Receiver<WorkerMsg>>,
     worker_handle: Option<std::thread::JoinHandle<()>>,
+    version_rx: Option<mpsc::Receiver<Option<String>>>,
 }
 
 impl App {
@@ -62,6 +65,11 @@ impl App {
             logs.push(format!("Found {} iPod(s).", devices.len()));
         }
 
+        let (vtx, version_rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = vtx.send(crate::version::latest_version());
+        });
+
         App {
             devices,
             selected: 0,
@@ -78,8 +86,10 @@ impl App {
             should_quit: false,
             show_help: false,
             confirm: false,
+            latest_version: None,
             worker_rx: None,
             worker_handle: None,
+            version_rx: Some(version_rx),
         }
     }
 
@@ -128,6 +138,14 @@ impl App {
         }
     }
 
+    fn drain_version(&mut self) {
+        if let Some(rx) = &self.version_rx {
+            if let Ok(Some(v)) = rx.try_recv() {
+                self.latest_version = Some(v);
+            }
+        }
+    }
+
     fn push_log(&mut self, s: String) {
         self.logs.push(s);
         if self.logs.len() > 2000 {
@@ -164,6 +182,7 @@ impl App {
             firmware: None,
             bootloader: None,
             target: None,
+            no_themes: false,
             backup_dir: None,
         };
 
@@ -275,6 +294,7 @@ impl App {
         let res = (|| -> Result<()> {
             loop {
                 self.drain_worker();
+                self.drain_version();
                 self.frame += 1;
                 terminal.draw(|f| ui::draw(f, self))?;
                 if self.should_quit {

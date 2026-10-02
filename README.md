@@ -48,7 +48,12 @@ sudo rockbox-tui install --device /dev/sdX --firmware rockbox-ipodvideo.zip
 sudo rockbox-tui uninstall --device /dev/sdX
 sudo rockbox-tui backup   --device /dev/sdX --out ipod-firmware.img
 sudo rockbox-tui restore  --device /dev/sdX --from ipod-firmware.img
+sudo rockbox-tui theme    --device /dev/sdX --zip theme.zip    # install a theme pack
+sudo rockbox-tui fonts    --device /dev/sdX --zip fonts.zip    # install fonts
 ```
+
+`install` is opinionated: by default it also installs a bundled theme pack and
+activates a default theme. Disable that with `--no-themes`.
 
 ### TUI keys
 
@@ -75,6 +80,9 @@ sudo rockbox-tui restore  --device /dev/sdX --from ipod-firmware.img
 5. **Flash** — appends the bootloader to the OSOS firmware image and rewrites
    the firmware directory (the `entryOffset`/`len`/`chksum` dance from
    `ipodpatcher`).
+6. **Themes** — installs the bundled theme pack (a curated starter theme with
+   its fonts) and activates the default theme by writing its settings to
+   `.rockbox/config.cfg`. Skip with `--no-themes`.
 
 ## Getting the firmware and bootloader
 

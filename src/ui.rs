@@ -26,7 +26,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         ])
         .split(area);
 
-    draw_title(f, chunks[0]);
+    draw_title(f, chunks[0], app);
     draw_devices(f, chunks[1], app);
     draw_logs(f, chunks[2], app);
     draw_footer(f, chunks[3], app);
@@ -39,13 +39,18 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 }
 
-fn draw_title(f: &mut Frame, area: Rect) {
+fn draw_title(f: &mut Frame, area: Rect, app: &App) {
+    let version = match &app.latest_version {
+        Some(v) => format!(" · Rockbox {v}"),
+        None => "".to_string(),
+    };
     let line = Line::from(vec![
         Span::styled(
             " rockbox-tui ",
             Style::default().fg(Color::Black).bg(ACCENT).add_modifier(Modifier::BOLD),
         ),
         Span::styled(" install Rockbox onto iPods ", Style::default().fg(MUTED)),
+        Span::styled(version, Style::default().fg(OK)),
     ]);
     f.render_widget(Paragraph::new(line), area);
 }

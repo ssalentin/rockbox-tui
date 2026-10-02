@@ -3,7 +3,10 @@ mod bootloader;
 mod firmware;
 mod ipod;
 mod mounts;
+mod theme;
+mod themes;
 mod ui;
+mod version;
 mod workflow;
 
 use anyhow::Result;
@@ -19,12 +22,15 @@ fn print_help() {
     println!("  rockbox-tui uninstall --device /dev/sdX");
     println!("  rockbox-tui backup  --device /dev/sdX --out FILE");
     println!("  rockbox-tui restore --device /dev/sdX --from FILE");
+    println!("  rockbox-tui theme   --device /dev/sdX --zip THEME.zip");
+    println!("  rockbox-tui fonts   --device /dev/sdX --zip FONTS.zip");
     println!();
     println!("Install options:");
     println!("  --device <PATH>       whole-disk device (e.g. /dev/sdc)");
     println!("  --firmware <ZIP>      use a locally downloaded firmware zip (skip download)");
     println!("  --bootloader <FILE>   use a bootloader .ipod/.bin file (skip bundled)");
     println!("  --target <NAME>       force a build target (e.g. ipodvideo64mb)");
+    println!("  --no-themes           skip the bundled theme pack + default theme");
     println!("  --backup-dir <DIR>    where to write the firmware backup");
     println!();
     println!("  -V, --version         print version");
@@ -50,6 +56,8 @@ fn main() -> Result<()> {
         "uninstall" => cmd_uninstall(&args[1..])?,
         "backup" => cmd_backup(&args[1..])?,
         "restore" => cmd_restore(&args[1..])?,
+        "theme" => cmd_assets(&args[1..], "theme")?,
+        "fonts" => cmd_assets(&args[1..], "fonts")?,
         other => {
             eprintln!("unknown command: {other}");
             print_help();
@@ -280,12 +288,46 @@ fn cmd_restore(args: &[String]) -> Result<()> {
     }
 }
 
+/// Install a theme or font archive onto the mounted data partition.
+fn cmd_assets(args: &[String], kind: &str) -> Result<()> {
+    let mut device = None;
+    let mut zip = None;
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--device" => device = args.get(i + 1).cloned(),
+            "--zip" => zip = args.get(i + 1).cloned(),
+            _ => {}
+        }
+        i += 1;
+    }
+    let (device, zip) = match (device, zip) {
+        (Some(d), Some(z)) => (d, z),
+        _ => {
+            eprintln!("{kind} requires --device and --zip");
+            std::process::exit(2);
+        }
+    };
+
+    let mount = mounts::find_data_mount(&device)
+        .ok_or_else(|| anyhow::anyhow!("data partition is not mounted — mount it first"))?;
+    let installed = theme::install(std::path::Path::new(&zip), &mount)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    println!("Installed {} file(s) to {}/.rockbox:", installed.len(), mount.display());
+    for f in installed {
+        println!("  {}", f.display());
+    }
+    Ok(())
+}
+
 fn parse_install_options(args: &[String]) -> Result<workflow::InstallOptions> {
     let mut opts = workflow::InstallOptions {
         device: String::new(),
         firmware: None,
         bootloader: None,
         target: None,
+        no_themes: false,
         backup_dir: None,
     };
     let mut i = 0;
@@ -311,6 +353,7 @@ fn parse_install_options(args: &[String]) -> Result<workflow::InstallOptions> {
                     opts.target = Some(v.clone());
                 }
             }
+            "--no-themes" => opts.no_themes = true,
             "--backup-dir" => {
                 if let Some(v) = args.get(i + 1) {
                     opts.backup_dir = Some(v.into());

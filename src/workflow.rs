@@ -28,6 +28,8 @@ pub struct InstallOptions {
     /// on auto-detection. Useful when RAM size can't be read because the iPod
     /// is booted into Rockbox rather than Apple Disk Mode.
     pub target: Option<String>,
+    /// Skip installing the bundled theme pack + activating the default theme.
+    pub no_themes: bool,
     /// Directory to store the firmware-partition backup in.
     pub backup_dir: Option<PathBuf>,
 }
@@ -111,7 +113,16 @@ pub fn install(opts: &InstallOptions, on: &mut dyn FnMut(Event)) -> Result<(), S
     let rockbox_dir = firmware::extract(&firmware_path, &mount)?;
     on(Event::Log(format!("Extracted {}", rockbox_dir.display())));
 
-    // 4. Flash the bootloader.
+    // 4. Install the bundled theme pack and activate the default theme.
+    if !opts.no_themes {
+        on(Event::Step("Installing bundled themes + fonts".into()));
+        let written = crate::themes::install_bundled(&mount)?;
+        on(Event::Log(format!("Installed {} theme file(s)", written.len())));
+        crate::themes::activate_default(&mount)?;
+        on(Event::Log("Activated default theme (musicOS)".into()));
+    }
+
+    // 5. Flash the bootloader.
     on(Event::Step("Flashing bootloader".into()));
     let bootloader = bootloader::load(opts.bootloader.as_deref())?;
     ipod::add_bootloader(&ipod, &mut dev.file(), &bootloader)?;
