@@ -36,6 +36,7 @@ fn main() -> Result<()> {
 
     // No arguments -> TUI.
     if args.is_empty() {
+        escalate_if_needed();
         let mut app = app::App::new();
         return app.run();
     }
@@ -56,6 +57,28 @@ fn main() -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Re-exec the program with elevated privileges (via `pkexec`) when raw
+/// device access is required but unavailable. Only used for the TUI, where a
+/// silent "no iPods found" would otherwise be confusing.
+fn escalate_if_needed() {
+    // Already root?
+    if unsafe { libc::geteuid() } == 0 {
+        return;
+    }
+    // We can already read the devices (e.g. user is in the `disk` group)?
+    let (devices, denied) = ipod::io::scan();
+    if !devices.is_empty() || denied == 0 {
+        return;
+    }
+    let exe = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(_) => return,
+    };
+    eprintln!("raw disk access is required — requesting elevation…");
+    let _ = std::process::Command::new("pkexec").arg(exe).status();
+    std::process::exit(0);
 }
 
 fn cmd_scan() {
