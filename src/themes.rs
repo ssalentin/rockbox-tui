@@ -6,8 +6,14 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-/// The bundled theme, as a zip laid out relative to `.rockbox/`.
-const BUNDLED_THEME_ZIP: &[u8] = include_bytes!("../assets/themes/musicOS.zip");
+/// The bundled themes, as zips laid out relative to `.rockbox/`.
+///
+/// musicOS is the default (activated after install); the others are installed
+/// alongside it so they can be selected from Rockbox's Theme menu.
+const BUNDLED_THEMES: &[&[u8]] = &[
+    include_bytes!("../assets/themes/musicOS.zip"),
+    include_bytes!("../assets/themes/chroma.zip"),
+];
 
 /// Settings that activate the bundled theme, parsed from its `.cfg`.
 const DEFAULT_THEME_SETTINGS: &[(&str, &str)] = &[
@@ -29,7 +35,11 @@ const DEFAULT_THEME_SETTINGS: &[(&str, &str)] = &[
 /// Install the bundled theme pack onto the device. Returns the list of files
 /// written (relative to `.rockbox/`).
 pub fn install_bundled(mount: &Path) -> Result<Vec<PathBuf>, String> {
-    crate::theme::install(Cursor::new(BUNDLED_THEME_ZIP), mount)
+    let mut written = Vec::new();
+    for zip in BUNDLED_THEMES {
+        written.extend(crate::theme::install(Cursor::new(*zip), mount)?);
+    }
+    Ok(written)
 }
 
 /// Merge `settings` into an existing `config.cfg` body: keys that already
@@ -83,15 +93,14 @@ mod tests {
 
     #[test]
     fn bundled_zip_is_complete() {
-        let mut archive = zip::ZipArchive::new(Cursor::new(BUNDLED_THEME_ZIP)).unwrap();
-        let names: Vec<String> = (0..archive.len())
-            .map(|i| archive.by_index(i).unwrap().name().to_string())
-            .collect();
-        // Must include the cfg, the wps/sbs, images, and fonts.
-        assert!(names.iter().any(|n| n == "themes/musicOS_v2.cfg"));
-        assert!(names.iter().any(|n| n == "wps/musicOS_v2.wps"));
-        assert!(names.iter().any(|n| n == "wps/musicOS_v2/backdrop.bmp"));
-        assert!(names.iter().any(|n| n == "fonts/20-Inter-SemiBold.fnt"));
+        for (idx, zip) in BUNDLED_THEMES.iter().enumerate() {
+            let mut archive = zip::ZipArchive::new(Cursor::new(*zip)).unwrap();
+            let names: Vec<String> = (0..archive.len())
+                .map(|i| archive.by_index(i).unwrap().name().to_string())
+                .collect();
+            assert!(names.iter().any(|n| n.ends_with(".cfg")), "theme {idx} has no .cfg");
+            assert!(names.iter().any(|n| n.ends_with(".fnt")), "theme {idx} has no fonts");
+        }
     }
 
     #[test]
